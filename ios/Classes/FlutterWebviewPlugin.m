@@ -1,6 +1,10 @@
 #import "FlutterWebviewPlugin.h"
 #import "WebviewJavaScriptChannelHandler.h"
 
+//this new one
+
+
+static NSString *const KEY_SCHEMA_URL = @"schemaURL";
 static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
 
 // UIWebViewDelegate
@@ -387,6 +391,13 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
 
     BOOL isInvalid = [self checkInvalidUrl: navigationAction.request.URL];
     
+    NSString *scheme = navigationAction.request.URL.scheme;
+    
+    if ([self isLocalURL:scheme] && !isInvalid) {
+        [channel invokeMethod:@"onLocalURL" arguments:@{KEY_SCHEMA_URL: navigationAction.request.URL.absoluteString}];
+    }
+    
+    
     id data = @{@"url": navigationAction.request.URL.absoluteString,
                 @"type": isInvalid ? @"abortLoad" : @"shouldStart",
                 @"navigationType": [NSNumber numberWithInteger:navigationAction.navigationType]};
@@ -412,6 +423,16 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
     } else {
         decisionHandler(WKNavigationActionPolicyCancel);
     }
+}
+
+- (BOOL)isLocalURL:(NSString *)url {
+    if ([url hasPrefix:@"http"]
+        || [url hasPrefix:@"about"]
+        || [url hasPrefix:@"file"]) {
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration

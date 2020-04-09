@@ -68,6 +68,15 @@ public class BrowserClient extends WebViewClient {
         // while returning false causes the WebView to continue loading the URL as usual.
         String url = request.getUrl().toString();
         boolean isInvalid = checkInvalidUrl(url);
+
+        // 没已http开头，认为是本地连接，特殊处理
+        if (isLocalURL(url) && !isInvalid) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("schemaURL", url);
+            FlutterWebviewPlugin.channel.invokeMethod("onLocalURL", data);
+            return true;
+        }
+
         Map<String, Object> data = new HashMap<>();
         data.put("url", url);
         data.put("type", isInvalid ? "abortLoad" : "shouldStart");
@@ -81,12 +90,29 @@ public class BrowserClient extends WebViewClient {
         // returning true causes the current WebView to abort loading the URL,
         // while returning false causes the WebView to continue loading the URL as usual.
         boolean isInvalid = checkInvalidUrl(url);
+
+        // 没已http开头，认为是本地连接，特殊处理
+        if (isLocalURL(url) && !isInvalid) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("schemaURL", url);
+            FlutterWebviewPlugin.channel.invokeMethod("onLocalURL", data);
+            return true;
+        }
+
         Map<String, Object> data = new HashMap<>();
         data.put("url", url);
         data.put("type", isInvalid ? "abortLoad" : "shouldStart");
 
         FlutterWebviewPlugin.channel.invokeMethod("onState", data);
         return isInvalid;
+    }
+
+    public  boolean isLocalURL(String url) {
+        if (url.startsWith("http") || url.startsWith("about") || url.startsWith("file")){
+            return false;
+        }
+
+        return true;
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)

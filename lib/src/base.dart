@@ -36,6 +36,7 @@ class FlutterWebviewPlugin {
   final _onBack = StreamController<Null>.broadcast();
   final _onDestroy = StreamController<Null>.broadcast();
   final _onUrlChanged = StreamController<String>.broadcast();
+  final _onLocalUrlCalled = StreamController<String>.broadcast();
   final _onStateChanged = StreamController<WebViewStateChanged>.broadcast();
   final _onScrollXChanged = StreamController<double>.broadcast();
   final _onScrollYChanged = StreamController<double>.broadcast();
@@ -55,6 +56,9 @@ class FlutterWebviewPlugin {
         break;
       case 'onDestroy':
         _onDestroy.add(null);
+        break;
+      case 'onLocalURL':
+        _onLocalUrlCalled.add(call.arguments['schemaURL']);
         break;
       case 'onUrlChanged':
         _onUrlChanged.add(call.arguments['url']);
@@ -94,6 +98,9 @@ class FlutterWebviewPlugin {
 
   /// Listening url changed
   Stream<String> get onUrlChanged => _onUrlChanged.stream;
+
+  /// Listening local url called
+  Stream<String> get onLocalUrlCalled => _onLocalUrlCalled.stream;
 
   /// Listening the onState Event for iOS WebView and Android
   /// content is Map for type: {shouldStart(iOS)|startLoad|finishLoad}
@@ -285,6 +292,7 @@ class FlutterWebviewPlugin {
   /// Close all Streams
   void dispose() {
     _onDestroy.close();
+    _onLocalUrlCalled.close();
     _onUrlChanged.close();
     _onStateChanged.close();
     _onProgressChanged.close();
